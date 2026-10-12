@@ -1,8 +1,10 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { GinkgoLeaf } from "@/components/GinkgoLeaf";
 import { Logo } from "@/components/Logo";
 import { usePageMeta } from "@/lib/page-meta";
+import { PlanCard } from "@/components/PlanCard";
+import { listSubscriptions, PLANS, type Subscription } from "@/lib/flight-api";
 import { useAuthenticatedUser } from "./authenticated";
 
 export function AppPage() {
@@ -12,6 +14,22 @@ export function AppPage() {
   });
   const user = useAuthenticatedUser();
   const navigate = useNavigate();
+  const email = (user.email ?? "").toLowerCase();
+  const [subs, setSubs] = useState<Record<string, Subscription>>({});
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    listSubscriptions(email)
+      .then((rows) => !cancelled && setSubs(Object.fromEntries(rows.map((r) => [r.plan_name, r]))))
+      .catch((err) => !cancelled && setLoadError(err instanceof Error ? err.message : String(err)))
+      .finally(() => !cancelled && setLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [email]);
+
   async function signOut() {
     await supabase.auth.signOut();
     navigate("/", { replace: true });
@@ -28,12 +46,27 @@ export function AppPage() {
       </header>
       <main className="mx-auto max-w-3xl px-4 py-20">
         <h1 className="text-4xl font-semibold tracking-tight">Hi {user.email}</h1>
-        <div className="relative mt-8 overflow-hidden rounded-2xl border bg-card p-8 shadow-soft">
-          <GinkgoLeaf className="pointer-events-none absolute -bottom-14 -right-6 w-36 -rotate-[24deg] opacity-30" />
-          <p className="relative text-lg">你的航線追蹤儀表板即將上線 — 下一個里程碑會加上訂閱航線的功能。</p>
-          <p className="relative mt-2 text-sm text-muted-foreground">
-            Your dashboard is coming soon. Route-subscription will be added in the next milestone.
+        <p className="mt-3 text-muted-foreground">
+          選一條航線、設定目標價，票價達標時我們會寄 email 通知你。
+          <br />
+          Pick a route and a target price; we email you when the fare drops to it.
+        </p>
+        {loadError && (
+          <p className="mt-6 rounded-xl border border-destructive/40 bg-card p-4 text-sm text-destructive">
+            無法載入你的訂閱 / Could not load your subscriptions: {loadError}
           </p>
+        )}
+        <div className="mt-8 grid gap-5 md:grid-cols-2">
+          {PLANS.map((plan) => (
+            <PlanCard
+              key={plan.name}
+              email={email}
+              plan={plan}
+              subscription={subs[plan.name]}
+              loading={loading}
+              onSaved={(s) => setSubs((prev) => ({ ...prev, [s.plan_name]: s }))}
+            />
+          ))}
         </div>
       </main>
     </div>
