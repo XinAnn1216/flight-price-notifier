@@ -12,6 +12,19 @@ Continue developing this project in the [Lovable editor](https://lovable.dev/pro
 - **Stay in sync**: every change made in Lovable is committed straight to this repository.
 - **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
 
+## Backend
+
+The app uses its own Supabase project (`kurwtkyrhqbcflqofsnc`). The client in
+`src/integrations/supabase/client.ts` reads two build-time env vars:
+
+| Variable | Value |
+| --- | --- |
+| `VITE_SUPABASE_URL` | `https://kurwtkyrhqbcflqofsnc.supabase.co` |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | the project's `sb_publishable_*` key |
+
+They are set in `.env` for local builds. On Vercel, add the same two variables
+under Project Settings → Environment Variables, then redeploy.
+
 ## Development
 
 Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
