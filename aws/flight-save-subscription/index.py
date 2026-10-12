@@ -2,7 +2,8 @@ import json, re, boto3
 from datetime import datetime, timezone
 from decimal import Decimal, InvalidOperation
 
-PLANS = {"tokyo": {"origin": "TPE", "destination": "TYO"}, "seoul": {"origin": "TPE", "destination": "SEL"}}
+PLANS = {"tokyo": {"origin": "TPE", "destination": "TYO"}, "seoul": {"origin": "TPE", "destination": "SEL"},
+         "london": {"origin": "TPE", "destination": "LON"}}
 EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 ddb = boto3.resource("dynamodb").Table("subscriptions")
 
@@ -25,7 +26,7 @@ def handler(event, context):
     if not EMAIL_RE.match(email):
         return resp(400, {"error": "invalid email"})
     if plan_name not in PLANS:
-        return resp(400, {"error": "plan_name must be tokyo or seoul"})
+        return resp(400, {"error": "plan_name must be tokyo, seoul or london"})
     try:
         target = Decimal(str(data.get("target_price")))
     except (InvalidOperation, TypeError):

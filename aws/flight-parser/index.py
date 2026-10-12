@@ -26,10 +26,14 @@ def qurl():
     return _qurl
 
 
-def next_month():
+def upcoming_months(n=3):
     now = datetime.now(timezone.utc)
-    y, m = (now.year + 1, 1) if now.month == 12 else (now.year, now.month + 1)
-    return f"{y:04d}-{m:02d}"
+    y, m = now.year, now.month
+    out = []
+    for _ in range(n):
+        y, m = (y + 1, 1) if m == 12 else (y, m + 1)
+        out.append(f"{y:04d}-{m:02d}")
+    return out
 
 
 def fetch_cheapest(origin, destination, month, tok, currency):
@@ -47,9 +51,11 @@ def fetch_cheapest(origin, destination, month, tok, currency):
         print("travelpayouts", currency, "error", repr(e))
         return None
     if not body.get("success") or not body.get("data"):
+        print("travelpayouts", currency, month, "empty:", str(body)[:200])
         return None
     offers = body["data"].get(destination, {})
     if not offers:
+        print("travelpayouts", currency, month, "no offers for", destination, "keys:", list(body["data"])[:5])
         return None
     best = min(offers.values(), key=lambda o: o["price"])
     return {"price": best["price"], "currency": currency.upper(), "airline": best.get("airline"),
@@ -69,9 +75,14 @@ def subscribers(route):
 def handler(event, context):
     origin, destination = event["origin"], event["destination"]
     route = event.get("route") or f"{origin}-{destination}"
-    month = next_month()
     tok = token()
-    tw = fetch_cheapest(origin, destination, month, tok, "twd")
+    # Short-haul routes usually have next-month fares cached; long-haul ones (e.g. London)
+    # may only have later months, so fall back up to three months ahead.
+    tw, month = None, None
+    for month in upcoming_months():
+        tw = fetch_cheapest(origin, destination, month, tok, "twd")
+        if tw:
+            break
     if not tw:
         print("no TWD fare for", route, month, "(empty/429) - skipping")
         return {"ok": True, "route": route, "matched": 0}

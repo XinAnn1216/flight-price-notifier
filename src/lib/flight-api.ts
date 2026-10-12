@@ -5,7 +5,7 @@ const API_BASE = (
   "https://b4didc2vx8.execute-api.ap-southeast-1.amazonaws.com"
 ).replace(/\/$/, "");
 
-export type PlanName = "tokyo" | "seoul";
+export type PlanName = "tokyo" | "seoul" | "london";
 
 export type Subscription = {
   email: string;
@@ -16,9 +16,11 @@ export type Subscription = {
   updated_at?: string;
 };
 
-export const PLANS: { name: PlanName; route: string; label: string; hint: number }[] = [
+// hint is a recent cheapest fare (TWD); null when the fare source has no data for the route yet.
+export const PLANS: { name: PlanName; route: string; label: string; hint: number | null }[] = [
   { name: "tokyo", route: "TPE-TYO", label: "台北 ✈ 東京", hint: 9325 },
   { name: "seoul", route: "TPE-SEL", label: "台北 ✈ 首爾", hint: 5989 },
+  { name: "london", route: "TPE-LON", label: "台北 ✈ 倫敦", hint: null },
 ];
 
 async function readJson<T>(res: Response): Promise<T> {

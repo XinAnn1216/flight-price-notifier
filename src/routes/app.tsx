@@ -44,7 +44,7 @@ export function AppPage() {
           </button>
         </div>
       </header>
-      <main className="mx-auto max-w-3xl px-4 py-20">
+      <main className="mx-auto max-w-5xl px-4 py-20">
         <h1 className="text-4xl font-semibold tracking-tight">Hi {user.email}</h1>
         <p className="mt-3 text-muted-foreground">
           選一條航線、設定目標價，票價達標時我們會寄 email 通知你。
@@ -56,7 +56,7 @@ export function AppPage() {
             無法載入你的訂閱 / Could not load your subscriptions: {loadError}
           </p>
         )}
-        <div className="mt-8 grid gap-5 md:grid-cols-2">
+        <div className="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
           {PLANS.map((plan) => (
             <PlanCard
               key={plan.name}

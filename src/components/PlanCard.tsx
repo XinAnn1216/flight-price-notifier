@@ -11,7 +11,7 @@ export function PlanCard({
   onSaved,
 }: {
   email: string;
-  plan: { name: PlanName; label: string; hint: number };
+  plan: { name: PlanName; label: string; hint: number | null };
   subscription?: Subscription | undefined;
   loading: boolean;
   onSaved: (s: Subscription) => void;
@@ -59,7 +59,9 @@ export function PlanCard({
       <p className="relative mt-2 text-sm text-muted-foreground">
         {subscription
           ? `目前目標價 NT$${subscription.target_price.toLocaleString()}`
-          : `近期最低價約 NT$${plan.hint.toLocaleString()}，設定你的目標價`}
+          : plan.hint === null
+            ? "目前還沒有這條航線的即時票價，先設定目標價，有資料時會通知你"
+            : `近期最低價約 NT$${plan.hint.toLocaleString()}，設定你的目標價`}
       </p>
       <label className="relative mt-5 block text-sm font-medium" htmlFor={`target-${plan.name}`}>
         目標價 (TWD) / Target price
@@ -74,7 +76,7 @@ export function PlanCard({
           required
           value={target}
           onChange={(e) => setTarget(e.target.value)}
-          placeholder={String(plan.hint + 1000)}
+          placeholder={plan.hint === null ? "" : String(plan.hint + 1000)}
           className="w-full min-w-0 rounded-full border bg-background px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
         />
         <button
