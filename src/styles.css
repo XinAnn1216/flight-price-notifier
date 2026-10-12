@@ -6,6 +6,7 @@
 
 @theme inline {
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -33,27 +34,35 @@
 }
 
 :root {
-  --radius: 0.75rem;
-  --background: oklch(0.13 0.012 285);
-  --foreground: oklch(0.97 0.005 285);
-  --card: oklch(0.17 0.016 285);
-  --card-foreground: oklch(0.97 0.005 285);
-  --popover: oklch(0.17 0.016 285);
-  --popover-foreground: oklch(0.97 0.005 285);
-  --primary: oklch(0.66 0.2 293);
-  --primary-foreground: oklch(0.99 0 0);
-  --secondary: oklch(0.22 0.02 285);
-  --secondary-foreground: oklch(0.97 0.005 285);
-  --muted: oklch(0.22 0.02 285);
-  --muted-foreground: oklch(0.68 0.02 285);
-  --accent: oklch(0.3 0.08 293);
-  --accent-foreground: oklch(0.97 0.005 285);
-  --destructive: oklch(0.65 0.2 25);
+  /* Ginkgo palette: warm cream paper, golden leaf, deep bark-brown ink. */
+  --radius: 0.9rem;
+  --background: oklch(0.945 0.032 80);
+  --foreground: oklch(0.27 0.035 58);
+  --card: oklch(0.977 0.017 85);
+  --card-foreground: oklch(0.27 0.035 58);
+  --popover: oklch(0.977 0.017 85);
+  --popover-foreground: oklch(0.27 0.035 58);
+  --primary: oklch(0.78 0.155 78);
+  --primary-foreground: oklch(0.25 0.04 58);
+  --secondary: oklch(0.91 0.04 80);
+  --secondary-foreground: oklch(0.27 0.035 58);
+  --muted: oklch(0.91 0.04 80);
+  --muted-foreground: oklch(0.49 0.045 62);
+  --accent: oklch(0.9 0.075 86);
+  --accent-foreground: oklch(0.45 0.1 65);
+  --destructive: oklch(0.55 0.19 30);
   --destructive-foreground: oklch(0.99 0 0);
-  --border: oklch(1 0 0 / 9%);
-  --input: oklch(1 0 0 / 12%);
-  --ring: oklch(0.66 0.2 293);
-  --glow: radial-gradient(60% 50% at 50% 0%, oklch(0.55 0.22 293 / 0.35), transparent 70%);
+  --border: oklch(0.5 0.07 65 / 16%);
+  --input: oklch(0.5 0.07 65 / 24%);
+  --ring: oklch(0.72 0.15 74);
+  --leaf-light: oklch(0.84 0.15 88);
+  --leaf: oklch(0.78 0.155 78);
+  --leaf-deep: oklch(0.66 0.14 68);
+  --glow: radial-gradient(55% 60% at 70% 30%, oklch(0.88 0.11 84 / 0.55), transparent 70%),
+    radial-gradient(40% 50% at 15% 80%, oklch(0.9 0.06 60 / 0.5), transparent 70%);
+  --shadow-soft: 0 1px 2px oklch(0.35 0.05 60 / 0.06), 0 18px 40px -18px oklch(0.4 0.08 60 / 0.35);
+  /* Faint paper grain, like the photo's matte backdrop. */
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.45 0 0 0 0 0.32 0 0 0 0 0.15 0 0 0 0.07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
 }
 
 @layer base {
@@ -61,17 +70,24 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    background-image: var(--paper-grain);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
+  h1, h2, h3 { font-family: var(--font-display); }
+  ::selection { background: oklch(0.86 0.12 84 / 0.6); }
 }
 
 @utility bg-glow {
   background-image: var(--glow);
 }
 
+@utility shadow-soft {
+  box-shadow: var(--shadow-soft);
+}
+
 @utility text-gradient {
-  background-image: linear-gradient(120deg, var(--foreground) 30%, var(--primary));
+  background-image: linear-gradient(120deg, var(--foreground) 35%, var(--leaf-deep) 75%, var(--leaf));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

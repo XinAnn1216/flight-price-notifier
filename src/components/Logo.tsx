@@ -3,8 +3,8 @@ import { Plane } from "lucide-react";
 
 export function Logo() {
   return (
-    <Link to="/" className="flex items-center gap-2 font-semibold tracking-tight">
-      <span className="grid h-8 w-8 place-items-center rounded-lg bg-primary text-primary-foreground">
+    <Link to="/" className="flex items-center gap-2.5 font-display text-lg font-semibold tracking-tight">
+      <span className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground shadow-soft">
         <Plane className="h-4 w-4" />
       </span>
       <span>Flight Price Notifier</span>
