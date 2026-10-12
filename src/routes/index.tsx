@@ -1,19 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Link } from "react-router";
 import { Radar, BellRing, CircleSlash } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { FadeIn } from "@/components/FadeIn";
-
-export const Route = createFileRoute("/")({
-  head: () => ({
-    meta: [
-      { title: "Flight Price Notifier — 機票降價通知" },
-      { name: "description", content: "Set a route and a target price — we email you when the fare from Taipei drops." },
-      { property: "og:title", content: "Flight Price Notifier — 機票降價通知" },
-      { property: "og:description", content: "Set a route and a target price — we email you when the fare drops." },
-    ],
-  }),
-  component: Index,
-});
+import { usePageMeta } from "@/lib/page-meta";
 
 const features = [
   { icon: Radar, title: "盯緊熱門航線 (Always-on route watching)", body: "持續監控台北出發的熱門航線（東京、首爾），自動抓最低票價。" },
@@ -21,7 +10,13 @@ const features = [
   { icon: CircleSlash, title: "隨時取消 (Cancel anytime)", body: "月訂閱制，不想用隨時停，沒有綁約。" },
 ];
 
-function Index() {
+export function Index() {
+  usePageMeta({
+    title: "Flight Price Notifier — 機票降價通知",
+    description: "Set a route and a target price — we email you when the fare from Taipei drops.",
+    ogDescription: "Set a route and a target price — we email you when the fare drops.",
+  });
+
   return (
     <div className="flex min-h-screen flex-col">
       <header className="sticky top-0 z-10 border-b bg-background/70 backdrop-blur">

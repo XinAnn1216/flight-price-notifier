@@ -1,14 +1,10 @@
-import { createFileRoute } from "@tanstack/react-router";
 import { AuthForm } from "@/components/AuthForm";
+import { usePageMeta } from "@/lib/page-meta";
 
-export const Route = createFileRoute("/signin")({
-  head: () => ({
-    meta: [
-      { title: "Sign in — Flight Price Notifier" },
-      { name: "description", content: "Sign in to manage your flight price alerts." },
-      { property: "og:title", content: "Sign in — Flight Price Notifier" },
-      { property: "og:description", content: "Sign in to manage your flight price alerts." },
-    ],
-  }),
-  component: () => <AuthForm mode="signin" />,
-});
+export function SignIn() {
+  usePageMeta({
+    title: "Sign in — Flight Price Notifier",
+    description: "Sign in to manage your flight price alerts.",
+  });
+  return <AuthForm mode="signin" />;
+}
