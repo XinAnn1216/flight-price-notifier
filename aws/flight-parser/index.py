@@ -63,10 +63,23 @@ def fetch_cheapest(origin, destination, month, tok, currency):
 
 
 def subscribers(route):
-    kw = {"FilterExpression": Attr("route").eq(route)}
+    # M2 paywall: only active rows, or cancelled rows still inside the period they paid for.
+    kw = {"FilterExpression": Attr("route").eq(route) & Attr("subscription_status").is_in(["active", "cancelled"])}
+    now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")  # same fixed-width format as the writers
     while True:
         page = _ddb.scan(**kw)
-        yield from page.get("Items", [])
+        for it in page.get("Items", []):
+            if it["subscription_status"] == "active":
+                yield it
+            elif (it.get("current_period_end") or "") >= now:
+                yield it  # cancelled, still in grace
+            else:
+                # Grace lapsed: retire the row lazily (nobody pushes an "expired" event).
+                _ddb.update_item(Key={"email": it["email"], "route": it["route"]},
+                                 UpdateExpression="SET subscription_status=:x, updated_at=:n",
+                                 ConditionExpression=Attr("subscription_status").eq("cancelled"),
+                                 ExpressionAttributeValues={":x": "expired", ":n": now})
+                print("expired", it["email"], route, "period ended", it.get("current_period_end"))
         if "LastEvaluatedKey" not in page:
             return
         kw["ExclusiveStartKey"] = page["LastEvaluatedKey"]
@@ -90,7 +103,7 @@ def handler(event, context):
     print(route, month, "cheapest", tw["price"], "TWD", tw["airline"], tw["depart_date"],
           "| USD", us["price"] if us else "n/a")
     matched = 0
-    for it in subscribers(route):  # M1: no subscription_status filter
+    for it in subscribers(route):
         tp = it.get("target_price")
         if tp is None or Decimal(tp) < Decimal(str(tw["price"])):
             continue

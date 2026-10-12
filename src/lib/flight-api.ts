@@ -7,6 +7,10 @@ const API_BASE = (
 
 export type PlanName = "tokyo" | "seoul" | "london";
 
+// M2 lifecycle: pending_payment -> active -> cancelled (still served until current_period_end) -> expired.
+// Rows saved before M2 have no status and are treated as unpaid.
+export type SubscriptionStatus = "pending_payment" | "active" | "cancelled" | "expired";
+
 export type Subscription = {
   email: string;
   route: string;
@@ -14,7 +18,15 @@ export type Subscription = {
   target_price: number;
   currency: "TWD";
   updated_at?: string;
+  subscription_status?: SubscriptionStatus;
+  current_period_end?: string;
+  current_period_end_date?: string;
 };
+
+export function statusOf(s: Subscription | undefined): SubscriptionStatus | "none" {
+  if (!s) return "none";
+  return s.subscription_status ?? "pending_payment";
+}
 
 // hint is a recent cheapest fare (TWD); null when the fare source has no data for the route yet.
 export const PLANS: { name: PlanName; route: string; label: string; hint: number | null }[] = [
@@ -29,20 +41,53 @@ async function readJson<T>(res: Response): Promise<T> {
   return body;
 }
 
-export async function listSubscriptions(email: string): Promise<Subscription[]> {
+export async function listSubscriptions(
+  email: string,
+): Promise<{ subscriptions: Subscription[]; monthlyPrice: number | null }> {
   const res = await fetch(`${API_BASE}/subscriptions?email=${encodeURIComponent(email)}`);
-  return (await readJson<{ subscriptions: Subscription[] }>(res)).subscriptions;
+  const body = await readJson<{ subscriptions: Subscription[]; monthly_price?: number }>(res);
+  return { subscriptions: body.subscriptions, monthlyPrice: body.monthly_price ?? null };
 }
+
+// /subscribe answers with ECPay's auto-submit checkout page (text/html) for anyone who still has to pay,
+// or with JSON when a paid-through subscription only changed its target price.
+export type SaveResult =
+  { kind: "checkout"; html: string } | { kind: "updated"; subscription: Subscription };
 
 export async function saveSubscription(
   email: string,
   planName: PlanName,
   targetPrice: number,
-): Promise<Subscription> {
+): Promise<SaveResult> {
   const res = await fetch(`${API_BASE}/subscribe`, {
     method: "POST",
     headers: { "content-type": "application/json" },
     body: JSON.stringify({ email, plan_name: planName, target_price: targetPrice }),
   });
-  return (await readJson<{ subscription: Subscription }>(res)).subscription;
+  if (res.ok && (res.headers.get("content-type") ?? "").includes("text/html")) {
+    return { kind: "checkout", html: await res.text() };
+  }
+  return {
+    kind: "updated",
+    subscription: (await readJson<{ subscription: Subscription }>(res)).subscription,
+  };
+}
+
+// Replace the page with the returned form; its inline script POSTs the browser to ECPay's cashier.
+export function goToCheckout(html: string) {
+  document.open();
+  document.write(html);
+  document.close();
+}
+
+export async function cancelSubscription(
+  email: string,
+  route: string,
+): Promise<{ subscription_status: SubscriptionStatus; current_period_end_date?: string }> {
+  const res = await fetch(`${API_BASE}/cancel`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ email, route }),
+  });
+  return readJson(res);
 }
